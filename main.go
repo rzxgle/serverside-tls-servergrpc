@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"exemploserversidetls/src/pb/products"
+	"fmt"
 	"log"
 	"net"
+	"os"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -28,6 +31,16 @@ func (s *server) FindAll(ctx context.Context, req *products.ListProductRequest) 
 }
 
 func loadTLSCredentials() (credentials.TransportCredentials, error) {
+	pemClientCA, err := os.ReadFile("./src/cert/ca-cert.pem")
+	if err != nil {
+		return nil, err
+	}
+
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(pemClientCA) {
+		return nil, fmt.Errorf("erro ao adicionar o certificado da CA")
+	}
+
 	serverCert, err := tls.LoadX509KeyPair("./src/cert/server-cert.pem", "./src/cert/server-key.pem")
 	if err != nil {
 		return nil, err
@@ -35,7 +48,8 @@ func loadTLSCredentials() (credentials.TransportCredentials, error) {
 
 	config := &tls.Config{
 		Certificates: []tls.Certificate{serverCert},
-		ClientAuth:   tls.NoClientCert,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    certPool,
 	}
 
 	return credentials.NewTLS(config), nil
