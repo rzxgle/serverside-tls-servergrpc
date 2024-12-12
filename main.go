@@ -55,6 +55,11 @@ func loadTLSCredentials() (credentials.TransportCredentials, error) {
 	return credentials.NewTLS(config), nil
 }
 
+func interceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	fmt.Println("function: ", info.FullMethod)
+	return handler(ctx, req)
+}
+
 func main() {
 	srv := server{}
 
@@ -71,6 +76,7 @@ func main() {
 	//esse servidor usará tls na criação do servidor grpc
 	s := grpc.NewServer(
 		grpc.Creds(tlsCredentials),
+		grpc.UnaryInterceptor(interceptor),
 	)
 
 	products.RegisterProductServiceServer(s, &srv)
