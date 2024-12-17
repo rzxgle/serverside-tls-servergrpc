@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -19,6 +20,8 @@ type server struct {
 }
 
 func (s *server) FindAll(ctx context.Context, req *products.ListProductRequest) (*products.ListProductResponse, error) {
+	time.Sleep(2 * time.Second)
+
 	productList := make([]*products.Product, 0)
 	productList = append(productList, &products.Product{
 		Id:    1,
